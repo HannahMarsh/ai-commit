@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/insulineru/ai-commit.git"
+    "url": "git+https://github.com/HannahMarsh/ai-commit.git"
   },
   "keywords": [
     "ai",
@@ -27,9 +27,9 @@
   "author": "Insuline.ru <insuline.ru@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/insulineru/ai-commit/issues"
+    "url": "https://github.com/HannahMarsh/ai-commit/issues"
   },
-  "homepage": "https://github.com/insulineru/ai-commit#readme",
+  "homepage": "https://github.com/HannahMarsh/ai-commit#readme",
   "dependencies": {
     "chatgpt": "^5.0.0",
     "dotenv": "^16.0.3",
