@@ -89,7 +89,7 @@ const sendMessage = async (input) => {
 
   if (AI_PROVIDER == 'groq') {
     console.log('prompting groq...');
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const groq = new Groq({ apiKey: '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' });
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
