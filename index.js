@@ -15,10 +15,9 @@ const REGENERATE_MSG = "♻️ Regenerate Commit Messages";
 console.log('Ai provider: ', AI_PROVIDER);
 
 const ENDPOINT = args.ENDPOINT || process.env.ENDPOINT;
-const apiKey = args.apiKey || process.env.OPENAI_API_KEY;
 const language = args.language || process.env.AI_COMMIT_LANGUAGE || 'english';
 
-if (AI_PROVIDER == 'openai' && !apiKey) {
+if (AI_PROVIDER == 'openai' && !(args.apiKey || process.env.OPENAI_API_KEY)) {
   console.error("Please set the OPENAI_API_KEY environment variable.");
   process.exit(1);
 }
@@ -109,7 +108,7 @@ const sendMessage = async (input) => {
 
   if (AI_PROVIDER == 'openai') {
     console.log('prompting chat gpt...');
-    const api = new ChatGPTAPI({ apiKey });
+    const api = new ChatGPTAPI({ apiKey: args.apiKey || process.env.OPENAI_API_KEY });
     const { text } = await api.sendMessage(input);
     console.log('prompting ai done!');
     return text;
