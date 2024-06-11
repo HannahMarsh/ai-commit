@@ -3,6 +3,7 @@
 'use strict'
 import { execSync } from "child_process";
 import { ChatGPTAPI } from "chatgpt";
+import Groq from "groq-sdk";
 import inquirer from "inquirer";
 import { getArgs, checkGitRepository } from "./helpers.js";
 import { addGitmojiToCommitMessage } from './gitmoji.js';
@@ -101,6 +102,26 @@ const sendMessage = async (input) => {
     } catch (err) {
       throw new Error('local model issues. details:' + err.message)
     }
+  }
+
+  if (AI_PROVIDER == 'groq') {
+    console.log('prompting groq...')
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: input,
+        },
+      ],
+      model: "llama3-8b-8192",
+    });
+
+    // Print the completion returned by the LLM.
+    console.log('prompting groq done!')
+    const text = chatCompletion.choices[0]?.message?.content || "";
+    console.log(text);
+    return text
   }
 
   if (AI_PROVIDER == 'openai') {

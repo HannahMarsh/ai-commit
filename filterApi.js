@@ -8,8 +8,8 @@ const MAX_TOKENS = 4000;
 const FEE_COMPLETION = 0.001;
 
 async function filterApi({ prompt, numCompletion = 1, filterFee }) {
-    if(AI_PROVIDER == 'ollama'){
-        //ollama dont have any limits and is free so we dont need to filter anything
+    if(AI_PROVIDER == 'ollama' || AI_PROVIDER == 'groq'){
+        //ollama and groq dont have any limits and is free so we dont need to filter anything
         return true
     }
     const numTokens = encode(prompt).length;
