@@ -22,11 +22,6 @@ console.log('Ai provider: ', AI_PROVIDER);
 const ENDPOINT = args.ENDPOINT || process.env.ENDPOINT;
 const language = args.language || process.env.AI_COMMIT_LANGUAGE || 'english';
 
-if (AI_PROVIDER == 'openai' && !(args.apiKey || process.env.OPENAI_API_KEY)) {
-  console.error("Please set the OPENAI_API_KEY environment variable.");
-  process.exit(1);
-}
-
 let template = args.template || process.env.AI_COMMIT_COMMIT_TEMPLATE;
 const doAddEmoji = args.emoji || process.env.AI_COMMIT_ADD_EMOJI;
 const commitType = args['commit-type'];
@@ -73,35 +68,7 @@ const processEmoji = (msg, doAddEmoji) => {
  * send prompt to ai.
  */
 const sendMessage = async (input) => {
-  if (AI_PROVIDER == 'ollama') {
-    const model = MODEL || 'mistral';
-    const url = 'http://localhost:11434/api/generate';
-    const data = {
-      model,
-      prompt: input,
-      stream: false
-    };
-    console.log('prompting ollama...', url, model);
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const responseJson = await response.json();
-      const answer = responseJson.response;
-      console.log('response: ', answer);
-      console.log('prompting ai done!');
-      return answer;
-    } catch (err) {
-      throw new Error('local model issues. details:' + err.message);
-    }
-  }
-
-  if (AI_PROVIDER == 'groq') {
-    console.log('prompting groq...\n' + input + "\n--------------------------------------\n");
+    //console.log('prompting groq...\n' + input + "\n--------------------------------------\n");
     const groq = new Groq({ apiKey: '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' });
     const chatCompletion = await groq.chat.completions.create({
       messages: [
@@ -113,9 +80,9 @@ const sendMessage = async (input) => {
       model: "llama3-8b-8192",
     });
 
-    console.log('prompting groq done!');
+    //console.log('prompting groq done!');
     const text = chatCompletion.choices[0]?.message?.content || "";
-    console.log('got response...\n' + text + "\n--------------------------------------\n");
+    //console.log('got response...\n' + text + "\n--------------------------------------\n");
 
     let responseText = text.trim();
 
@@ -143,15 +110,7 @@ const sendMessage = async (input) => {
 
     // Return formatted summary and description
     return summary + "\n\n" + description;
-  }
 
-  if (AI_PROVIDER == 'openai') {
-    console.log('prompting chat gpt...');
-    const api = new ChatGPTAPI({ apiKey: args.apiKey || process.env.OPENAI_API_KEY });
-    const { text } = await api.sendMessage(input);
-    console.log('prompting ai done!');
-    return text;
-  }
 }
 
 const getPromptForSingleCommit = (diff) => {
@@ -215,7 +174,7 @@ const generateSingleCommit = async (diff) => {
     return;
   }
 
-  const answer = await inquirer.prompt([
+  let answer = await inquirer.prompt([
     {
       type: "confirm",
       name: "continue",
@@ -225,51 +184,23 @@ const generateSingleCommit = async (diff) => {
   ]);
 
   if (!answer.continue) {
-    console.log("Commit aborted by user 🙅‍♂️");
-    process.exit(1);
+    answer = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "regenerate",
+        message: "Do you want to regenerate a commit message?",
+        default: true,
+      },
+    ]);
+    if (!answer.continue) {
+      console.log("Commit aborted by user 🙅‍♂️");
+      process.exit(1);
+    } else {
+      generateSingleCommit(diff)
+    }
+  } else {
+    makeCommit(finalCommitMessage);
   }
-
-  makeCommit(finalCommitMessage);
-};
-
-const generateListCommits = async (diff, numOptions = 5) => {
-  const prompt =
-    "I want you to act as the author of a commit message in git."
-    + `I'll enter a git diff, and your job is to convert it into a useful commit message in ${language} language`
-    + (commitType ? ` with commit type '${commitType}.', ` : ", ")
-    + `and make ${numOptions} options that are separated by ";".`
-    + "For each option, use the present tense, return the full sentence, and use the conventional commits specification (<type in lowercase>: <subject>):"
-    + diff;
-
-  if (!await filterApi({ prompt, filterFee: args['filter-fee'], numCompletion: numOptions })) process.exit(1);
-
-  const text = await sendMessage(prompt);
-  let msgs = text.split(";").map((msg) => msg.trim()).map(msg => processEmoji(msg, args.emoji));
-
-  if (args.template) {
-    msgs = msgs.map(msg => processTemplate({
-      template: args.template,
-      commitMessage: msg,
-    }));
-  }
-
-  msgs.push(REGENERATE_MSG);
-
-  const answer = await inquirer.prompt([
-    {
-      type: "list",
-      name: "commit",
-      message: "Select a commit message",
-      choices: msgs,
-    },
-  ]);
-
-  if (answer.commit === REGENERATE_MSG) {
-    await generateListCommits(diff);
-    return;
-  }
-
-  makeCommit(answer.commit);
 };
 
 const filterDiff = (diff, ignorePatterns) => {
@@ -342,9 +273,7 @@ async function generateAICommit() {
     diff = filteredDiff
   }
 
-  args.list
-    ? await generateListCommits(diff)
-    : await generateSingleCommit(diff);
+  await generateSingleCommit(diff);
 }
 
 await generateAICommit();
