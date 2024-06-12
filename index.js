@@ -176,30 +176,21 @@ const generateSingleCommit = async (diff) => {
 
   let answer = await inquirer.prompt([
     {
-      type: "confirm",
+      type: "list",
       name: "continue",
-      message: "Do you want to commit?",
-      default: true,
+      message: "What do you want to do?",
+      choices: ["Continue with commit", "Regenerate message", "Abort"],
+      default: 0,
     },
   ]);
 
-  if (!answer.continue) {
-    answer = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "regenerate",
-        message: "Do you want to regenerate a commit message?",
-        default: true,
-      },
-    ]);
-    if (!answer.regenerate) {
-      console.log("Commit aborted by user 🙅‍♂️");
-      process.exit(1);
-    } else {
-      generateSingleCommit(diff)
-    }
-  } else {
+  if (answer.continue == "Continue with commit") {
     makeCommit(finalCommitMessage);
+  } else if (answer.continue == "Regenerate message") {
+    generateSingleCommit(diff)
+  } else {
+    console.log("Commit aborted by user 🙅‍♂️");
+      process.exit(1);
   }
 };
 
