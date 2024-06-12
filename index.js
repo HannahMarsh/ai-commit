@@ -246,15 +246,26 @@ const generateListCommits = async (diff, numOptions = 5) => {
 
 const filterDiff = (diff, ignorePatterns) => {
   const lines = diff.split('\n');
-  const filteredLines = lines.filter(line => {
-    for (const pattern of ignorePatterns) {
+  const filteredLines = [];
+  let skipBlock = false;
+
+  lines.forEach(line => {
+    if (ignorePatterns.some(pattern => {
       const regex = new RegExp(pattern.replace('*', '.*'));
-      if (regex.test(line)) {
-        return false;
-      }
+      return regex.test(line);
+    })) {
+      skipBlock = true;
     }
-    return true;
+
+    if (!skipBlock) {
+      filteredLines.push(line);
+    }
+
+    if (line.startsWith('diff --git')) {
+      skipBlock = false;
+    }
   });
+
   return filteredLines.join('\n');
 };
 
