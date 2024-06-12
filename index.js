@@ -133,7 +133,7 @@ const sendMessage = async (input) => {
     let description = responseText.split(/Description:\s/i)[1].trim();
 
     // Return formatted summary and description
-    return "\"" + summary + "\n\n" + description + "\"";
+    return summary + "\n\n" + description;
   }
 
   if (AI_PROVIDER == 'openai') {
