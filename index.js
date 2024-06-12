@@ -135,12 +135,13 @@ const getPromptForSingleCommit = (diff) => {
     + "\t+Another new line.\n"
     + "\t```\n\n"
     + "Here's how you can structure your commit message:\n\n"
-    + "Summary: <A concise, one-line sentence in the present tense that summarizes the changes (50 characters or less)>.\n"
-    + "Description: <A detailed explanation of the changes in the past tense.> \n\n"
+    + "Summary: <A concise, one-line sentence in the present tense that summarizes all changes (50 characters or less)>.\n"
+    + "Description: <A detailed explanation of all changes in the past tense.> \n\n"
     + "Important:\n"
-    + "\t1. The summary must be in the present tense, e.g., 'Fix login issue in user authentication'.\n"
-    + "\t2. The description must be in the past tense, e.g., 'This change fixed a bug with the password validation by...'.\n"
+    + "\t1. The summary must be in the present tense, e.g., 'Fix login issue, edit variables,...'.\n"
+    + "\t2. The description must be in the past tense, e.g., 'This change fixed a bug by...'.\n"
     + "\t3. Avoid prefacing your response with any additional text.\n"
+    + "\t4. The summary and description should cover ALL changes and focus on the most important ones."
     + "Here is the git diff, which you are to convert into a commit message as described:\n\n"
     + diff
   );
