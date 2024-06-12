@@ -145,10 +145,10 @@ const sendMessage = async (input) => {
 const getPromptForSingleCommit = (diff) => {
   //if (AI_PROVIDER == "openai" || AI_PROVIDER == "grok") {
     return (
-      "I want you to act as the author of a commit message in git. "
-      + `I'll enter a git diff, and your job is to convert it into a useful commit message in the ${language} language`
-      + (commitType ? ` with commit type '${commitType}'. ` : ". ")
-      + "Do not preface the commit with anything, use the present tense, return the full sentence, and use the conventional commits specification (<type in lowercase>: <subject>). Here is the diff: \n"
+      "Please act as the author of a git commit message. I will provide you with a git diff, and your task is to convert it into a concise, informative commit message"
+      + (commitType ? ` using the commit type '${commitType}'. ` : ". ")
+      + "Avoid prefacing the message with any additional text, and use the present tense. Ensure the message is a complete sentence. "
+      + "Remember, lines beginning with \"+\" indicate additions, and lines beginning with \"-\" indicate deletions. Here is the diff: \n"
       + diff
     );
   // }
@@ -276,9 +276,11 @@ async function generateAICommit() {
     console.error("This is not a git repository 🙅‍♂️");
     process.exit(1);
   }
+  
+  let diff = execSync("git diff --staged --ignore-space-change").toString(); // Add the --ignore-space-change flag
 
-  // Increase the buffer size to handle large diffs
-  let diff = execSync("git diff --staged").toString(); //execSync("git diff --staged", { maxBuffer: MAX_DIFF_SIZE }).toString();
+  diff = diff.replace(/^\+[\s]*$/gm, '');
+  diff = diff.replace(/\n[\s\n]*\n/gm, '\n');
 
   // Truncate the diff if it's too large
   if (diff.length > MAX_DIFF_LENGTH) {
