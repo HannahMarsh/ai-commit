@@ -178,7 +178,7 @@ const generateSingleCommit = async (diff) => {
     {
       type: "confirm",
       name: "continue",
-      message: "Do you want to continue?",
+      message: "Do you want to commit?",
       default: true,
     },
   ]);
@@ -192,7 +192,7 @@ const generateSingleCommit = async (diff) => {
         default: true,
       },
     ]);
-    if (!answer.continue) {
+    if (!answer.regenerate) {
       console.log("Commit aborted by user 🙅‍♂️");
       process.exit(1);
     } else {
