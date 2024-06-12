@@ -14,7 +14,7 @@ import path from 'path';
 
 const REGENERATE_MSG = "♻️ Regenerate Commit Messages";
 // const MAX_DIFF_SIZE = 50 * 1024 * 1024; // Set a reasonable size limit for diffs (e.g., 10MB)
-const MAX_DIFF_LENGTH = 6000; // Maximum characters for diff
+const MAX_DIFF_LENGTH = 10000; // Maximum characters for diff
 
 
 console.log('Ai provider: ', AI_PROVIDER);
@@ -128,9 +128,18 @@ const sendMessage = async (input) => {
     // Remove all double and single quotes and trim the response
     responseText = responseText.replace(/["']/g, '').trim();
 
-    // Extract summary and description
-    let summary = responseText.split(/Description:\s/i)[0].replace(/Summary:\s/i, '').trim();
-    let description = responseText.split(/Description:\s/i)[1].trim();
+    let summary = responseText;
+    let description = "";
+
+    if(responseText.startsWith("Summary")){
+      // Extract summary and description
+      summary = responseText.split("Description: ")[0].replace("Summary:", '').trim();
+      description = responseText.split("Description: ")[1].trim();
+    } else if(responseText.includes("\n\n")){
+      summary = responseText.split("\n\n")[0].trim();
+      description = responseText.split("\n\n")[1].trim();
+    }
+
 
     // Return formatted summary and description
     return summary + "\n\n" + description;
