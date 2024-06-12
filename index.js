@@ -179,14 +179,16 @@ const generateSingleCommit = async (diff) => {
       type: "list",
       name: "continue",
       message: "What do you want to do?",
-      choices: ["Continue with commit", "Regenerate message", "Abort"],
+      choices: ["   Continue", "   Regenerate", "   Abort"],
       default: 0,
     },
   ]);
 
-  if (answer.continue == "Continue with commit") {
+  console.log("\r                                  \n                                     \n")
+
+  if (answer.continue == "   Continue") {
     makeCommit(finalCommitMessage);
-  } else if (answer.continue == "Regenerate message") {
+  } else if (answer.continue == "   Regenerate") {
     generateSingleCommit(diff)
   } else {
     console.log("Commit aborted by user 🙅‍♂️");
