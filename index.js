@@ -101,7 +101,7 @@ const sendMessage = async (input) => {
   }
 
   if (AI_PROVIDER == 'groq') {
-    console.log('prompting groq...');
+    console.log('prompting groq...\n' + input + "\n--------------------------------------\n");
     const groq = new Groq({ apiKey: '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' });
     const chatCompletion = await groq.chat.completions.create({
       messages: [
@@ -115,20 +115,19 @@ const sendMessage = async (input) => {
 
     console.log('prompting groq done!');
     const text = chatCompletion.choices[0]?.message?.content || "";
-    console.log(text);
+    console.log('got response...\n' + text + "\n--------------------------------------\n");
 
-    let responseText = text;
+    let responseText = text.trim();
 
     // Remove any unwanted prefixes from the response
-    const prefixToRemove = "Here is a 10-word commit message summarizing the changes:";
-    if (responseText.startsWith(prefixToRemove)) {
+    if (responseText.startsWith("Here ")) {
+      const prefixToRemove = responseText.split("\n")[0];
       responseText = responseText.replace(prefixToRemove, "").trim();
     }
 
     // Remove quotes from the start and end if present
-    if (responseText.startsWith("\"") && responseText.endsWith("\"")) {
-      responseText = responseText.substring(1).trim();
-      responseText = responseText.slice(0, -1).trim();
+    if ((responseText.startsWith("\"") && responseText.endsWith("\"")) || (responseText.startsWith("'") && responseText.endsWith("'"))) {
+      responseText = responseText.substring(1, responseText.length - 1).trim();
     }
 
     return responseText;
@@ -144,20 +143,20 @@ const sendMessage = async (input) => {
 }
 
 const getPromptForSingleCommit = (diff) => {
-  if (AI_PROVIDER == "openai" || AI_PROVIDER == "grok") {
+  //if (AI_PROVIDER == "openai" || AI_PROVIDER == "grok") {
     return (
-      "I want you to act as the author of a commit message in git."
-      + `I'll enter a git diff, and your job is to convert it into a useful commit message in ${language} language`
+      "I want you to act as the author of a commit message in git. "
+      + `I'll enter a git diff, and your job is to convert it into a useful commit message in the ${language} language`
       + (commitType ? ` with commit type '${commitType}'. ` : ". ")
-      + "Do not preface the commit with anything, use the present tense, return the full sentence, and use the conventional commits specification (<type in lowercase>: <subject>): "
+      + "Do not preface the commit with anything, use the present tense, return the full sentence, and use the conventional commits specification (<type in lowercase>: <subject>). Here is the diff: \n"
       + diff
     );
-  }
-  return (
-    "Summarize this git diff into a useful, 10 words commit message"
-    + (commitType ? ` with commit type '${commitType}.'` : "")
-    + ": " + diff
-  );
+  // }
+  // return (
+  //   "Summarize this git diff into a useful, 10 words commit message"
+  //   + (commitType ? ` with commit type '${commitType}.'` : "")
+  //   + ": " + diff
+  // );
 };
 
 const generateSingleCommit = async (diff) => {
