@@ -11,7 +11,7 @@ import { filterApi } from "./filterApi.js";
 import { AI_PROVIDER, MODEL, args } from "./config.js";
 
 const REGENERATE_MSG = "♻️ Regenerate Commit Messages";
-const MAX_DIFF_SIZE = 1024 * 1024; // Set a reasonable size limit for diffs (e.g., 1MB)
+const MAX_DIFF_SIZE = 10 * 1024 * 1024; // Set a reasonable size limit for diffs (e.g., 1MB)
 
 
 console.log('Ai provider: ', AI_PROVIDER);
