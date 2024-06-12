@@ -8,9 +8,19 @@ const MAX_TOKENS = 4000;
 const FEE_COMPLETION = 0.001;
 
 async function filterApi({ prompt, numCompletion = 1, filterFee }) {
-    if(AI_PROVIDER == 'ollama' || AI_PROVIDER == 'groq'){
+    if(AI_PROVIDER == 'ollama'){
         //ollama and groq dont have any limits and is free so we dont need to filter anything
         return true
+    }
+    if(AI_PROVIDER == 'groq'){
+        return true;
+        // const numTokens = encode(prompt).length;
+
+        // if (numTokens > MAX_TOKENS) {
+        //     console.log("The commit diff is too large for the ChatGPT API. Max 4k tokens or ~8k characters. ");
+        //     return false;
+        // }
+        // return true
     }
     const numTokens = encode(prompt).length;
     const fee = numTokens / 1000 * FEE_PER_1K_TOKENS + (FEE_COMPLETION * numCompletion);

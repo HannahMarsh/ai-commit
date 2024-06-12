@@ -9,9 +9,12 @@ import { getArgs, checkGitRepository } from "./helpers.js";
 import { addGitmojiToCommitMessage } from './gitmoji.js';
 import { filterApi } from "./filterApi.js";
 import { AI_PROVIDER, MODEL, args } from "./config.js";
+import fs from 'fs';
+import path from 'path';
 
 const REGENERATE_MSG = "♻️ Regenerate Commit Messages";
-const MAX_DIFF_SIZE = 10 * 1024 * 1024; // Set a reasonable size limit for diffs (e.g., 1MB)
+// const MAX_DIFF_SIZE = 50 * 1024 * 1024; // Set a reasonable size limit for diffs (e.g., 10MB)
+const MAX_DIFF_LENGTH = 4000; // Maximum characters for diff
 
 
 console.log('Ai provider: ', AI_PROVIDER);
@@ -46,9 +49,17 @@ const processTemplate = ({ template, commitMessage }) => {
 }
 
 const makeCommit = (input) => {
-  console.log("Committing Message... 🚀 ");
-  execSync(`git commit -F -`, { input });
-  console.log("Commit Successful! 🎉");
+  try {
+    console.log("Committing Message... 🚀 ");
+    execSync(`git commit -F -`, { input });
+    console.log("Commit Successful! 🎉");
+  } catch (error) {
+    console.error("Error during commit:");
+    console.error(error.message);
+    console.error("stdout:", error.stdout ? error.stdout.toString() : "N/A");
+    console.error("stderr:", error.stderr ? error.stderr.toString() : "N/A");
+    process.exit(1);
+  }
 };
 
 const processEmoji = (msg, doAddEmoji) => {
@@ -105,7 +116,22 @@ const sendMessage = async (input) => {
     console.log('prompting groq done!');
     const text = chatCompletion.choices[0]?.message?.content || "";
     console.log(text);
-    return text;
+
+    let responseText = text;
+
+    // Remove any unwanted prefixes from the response
+    const prefixToRemove = "Here is a 10-word commit message summarizing the changes:";
+    if (responseText.startsWith(prefixToRemove)) {
+      responseText = responseText.replace(prefixToRemove, "").trim();
+    }
+
+    // Remove quotes from the start and end if present
+    if (responseText.startsWith("\"") && responseText.endsWith("\"")) {
+      responseText = responseText.substring(1).trim();
+      responseText = responseText.slice(0, -1).trim();
+    }
+
+    return responseText;
   }
 
   if (AI_PROVIDER == 'openai') {
@@ -118,7 +144,7 @@ const sendMessage = async (input) => {
 }
 
 const getPromptForSingleCommit = (diff) => {
-  if (AI_PROVIDER == "openai") {
+  if (AI_PROVIDER == "openai" || AI_PROVIDER == "grok") {
     return (
       "I want you to act as the author of a commit message in git."
       + `I'll enter a git diff, and your job is to convert it into a useful commit message in ${language} language`
@@ -219,6 +245,20 @@ const generateListCommits = async (diff, numOptions = 5) => {
   makeCommit(answer.commit);
 };
 
+const filterDiff = (diff, ignorePatterns) => {
+  const lines = diff.split('\n');
+  const filteredLines = lines.filter(line => {
+    for (const pattern of ignorePatterns) {
+      const regex = new RegExp(pattern.replace('*', '.*'));
+      if (regex.test(line)) {
+        return false;
+      }
+    }
+    return true;
+  });
+  return filteredLines.join('\n');
+};
+
 async function generateAICommit() {
   const isGitRepository = checkGitRepository();
 
@@ -228,7 +268,12 @@ async function generateAICommit() {
   }
 
   // Increase the buffer size to handle large diffs
-  const diff = execSync("git diff --staged", { maxBuffer: MAX_DIFF_SIZE }).toString();
+  let diff = execSync("git diff --staged").toString(); //execSync("git diff --staged", { maxBuffer: MAX_DIFF_SIZE }).toString();
+
+  // Truncate the diff if it's too large
+  if (diff.length > MAX_DIFF_LENGTH) {
+    diff = diff.substring(0, MAX_DIFF_LENGTH) + '\n... [diff truncated]';
+  }
 
   if (!diff) {
     console.log("No changes to commit 🙅");
@@ -236,6 +281,25 @@ async function generateAICommit() {
       "May be you forgot to add the files? Try git add . and then run this script again."
     );
     process.exit(1);
+  }
+
+  // Read and parse the .ai-commit.json configuration file
+  const configPath = path.resolve(process.cwd(), '.ai-commit.json');
+  let ignorePatterns = [];
+  if (fs.existsSync(configPath)) {
+    const configFile = fs.readFileSync(configPath, 'utf8');
+    const config = JSON.parse(configFile);
+    ignorePatterns = config.ignore || [];
+  }
+
+  // Filter the diff
+  const filteredDiff = filterDiff(diff, ignorePatterns).trim();
+
+  // Handle empty diff after filtering
+  if (!filteredDiff) {
+    console.log("No relevant changes to commit after applying ignore patterns 🙅");
+  } else {
+    diff = filteredDiff
   }
 
   args.list
