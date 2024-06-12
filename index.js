@@ -122,15 +122,18 @@ const sendMessage = async (input) => {
     // Remove any unwanted prefixes from the response
     if (responseText.startsWith("Here ")) {
       const prefixToRemove = responseText.split("\n")[0];
-      responseText = responseText.replace(prefixToRemove, "").trim();
+      responseText = responseText.replace(prefixToRemove, "");
     }
 
-    // Remove quotes from the start and end if present
-    if ((responseText.startsWith("\"") && responseText.endsWith("\"")) || (responseText.startsWith("'") && responseText.endsWith("'"))) {
-      responseText = responseText.substring(1, responseText.length - 1).trim();
-    }
+    // Remove all double and single quotes and trim the response
+    responseText = responseText.replace(/["']/g, '').trim();
 
-    return responseText;
+    // Extract summary and description
+    let summary = responseText.split(/Description:\s/i)[0].replace(/Summary:\s/i, '').trim();
+    let description = responseText.split(/Description:\s/i)[1].trim();
+
+    // Return formatted summary and description
+    return "\"" + summary + "\n\n" + description + "\"";
   }
 
   if (AI_PROVIDER == 'openai') {
@@ -145,10 +148,30 @@ const sendMessage = async (input) => {
 const getPromptForSingleCommit = (diff) => {
   //if (AI_PROVIDER == "openai" || AI_PROVIDER == "grok") {
     return (
-      "Please act as the author of a git commit message. I will provide you with a git diff, and your task is to convert it into a concise, informative commit message"
-      + (commitType ? ` using the commit type '${commitType}'. ` : ". ")
-      + "Avoid prefacing the message with any additional text, and use the present tense. Ensure the message is a complete sentence. "
-      + "Remember, lines beginning with \"+\" indicate additions, and lines beginning with \"-\" indicate deletions. Here is the diff: \n"
+      "Please act as the author of a git commit message. I will provide you with a git diff, and your task is to convert it into a detailed, informative commit message.\n"
+      + "To help you understand the git diff output:\n\n"
+      + "\t1. File Comparison Line: Shows the files being compared.\n"
+      + "\t2. Index Line: Indicates the blob hashes before and after the change and the file mode.\n"
+      + "\t3. File Change Markers: `---` shows the file before the change and `+++` shows the file after the change.\n"
+      + "\t4. Hunk Header: Indicates the location and number of lines affected in the files.\n"
+      + "\t   Example: `@@ -1,5 +1,7 @@` means the changes start at line 1 and cover 5 lines in the original file and start at line 1 and cover 7 lines in the new file.\n"
+      + "\t5. Changes: Lines starting with `-` are removed lines. Lines starting with `+` are added lines. Some unchanged lines may be shown for context.\n\n"
+      + "\tExample:\n"
+      + "\t```diff\n"
+      + "\tdiff --git a/file1.txt b/file1.txt\n"
+      + "\tindex e69de29..d95f3ad 100644\n"
+      + "\t--- a/file1.txt\n"
+      + "\t+++ b/file1.txt\n"
+      + "\t@@ -0,0 +1,2 @@\n"
+      + "\t-This line was removed.\n"
+      + "\t+This is a new line.\n"
+      + "\t+Another new line.\n"
+      + "\t```\n\n"
+      + "Here's how you can structure your commit message:\n\n"
+      + "Summary: <A concise, one-line sentence in the present tense that summarizes the changes (50 characters or less)>.\n"
+      + "Description: <A detailed explanation of the changes in the past tense.> \n\n"
+      + "\tAvoid prefacing your response with any additional text. Remember that the summary and description are in different tenses (present and past, respectively).\n"
+      + "Here is the git diff, which you are to convert into a commit message as described:\n\n"
       + diff
     );
   // }
