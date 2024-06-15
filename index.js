@@ -235,6 +235,7 @@ async function generateAICommit() {
 
   diff = diff.replace(/^\+[\s]*$/gm, '');
   diff = diff.replace(/\n[\s\n]*\n/gm, '\n');
+diff = diff.replaceAll(/\*/gm, '')
 
   // Truncate the diff if it's too large
   if (diff.length > MAX_DIFF_LENGTH) {
