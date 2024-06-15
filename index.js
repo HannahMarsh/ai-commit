@@ -230,7 +230,8 @@ async function generateAICommit() {
     process.exit(1);
   }
   
-  let diff = execSync("git diff --staged --ignore-space-change").toString(); // Add the --ignore-space-change flag
+  const diffObj = execSync("git diff --staged --ignore-space-change"); // Add the --ignore-space-change flag
+  let diff = diffObj.toString();
 
   diff = diff.replace(/^\+[\s]*$/gm, '');
   diff = diff.replace(/\n[\s\n]*\n/gm, '\n');
