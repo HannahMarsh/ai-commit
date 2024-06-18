@@ -109,7 +109,9 @@ const sendMessage = async (input) => {
 
 
     // Return formatted summary and description
-    return summary + "\n\n" + description;
+    let result = summary + "\n\n" + description;
+    result = result.replaceAll(/\*/g, '')
+    return result
 
 }
 
