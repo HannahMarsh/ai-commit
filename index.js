@@ -93,7 +93,8 @@ const sendMessage = async (input) => {
     }
 
     // Remove all double and single quotes and trim the response
-    responseText = responseText.replace(/["']/g, '').trim();
+    responseText = responseText.replaceAll(/["']/g, '').trim();
+    responseText = responseText.replaceAll(/\*/g, '')
 
     let summary = responseText;
     let description = "";
@@ -109,10 +110,7 @@ const sendMessage = async (input) => {
 
 
     // Return formatted summary and description
-    let result = summary + "\n\n" + description;
-    result = result.replaceAll(/\*/g, '')
-    return result
-
+    return summary + "\n\n" + description;
 }
 
 const getPromptForSingleCommit = (diff) => {
