@@ -102,7 +102,7 @@ const sendMessage = async (input) => {
     if(responseText.startsWith("Summary")){
       // Extract summary and description
       summary = responseText.split("Description: ")[0].replace("Summary:", '').trim();
-      description = responseText.split("Description: ")[1].trim();
+      description = responseText.split("Description: ")[1]
     } else if(responseText.includes("\n\n")){
       summary = responseText.split("\n\n")[0].trim();
       description = responseText.split("\n\n")[1].trim();
